@@ -348,6 +348,13 @@ declare module "@blueconic/blueconic-react-native" {
         getScreenNameAsync(): Promise<string>;
         /** Callback variant of {@link BlueConicClientStatic.getScreenNameAsync}. */
         getScreenNameWithCallback(callback: StringCallback): void;
+
+        // NativeModule conformance — required so BlueConicClient can be
+        // passed to `new NativeEventEmitter(...)` under RN 0.65+.
+        /** Required by `NativeEventEmitter` to register a listener for a given event type. */
+        addListener(eventType: string): void;
+        /** Required by `NativeEventEmitter` to remove the given number of listeners. */
+        removeListeners(count: number): void;
     }
 
     const BlueConicClient: BlueConicClientStatic;
