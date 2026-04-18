@@ -52,11 +52,12 @@ declare module "@blueconic/blueconic-react-native" {
         recommendations: Recommendation[];
     }
 
-    export type InitializeCallback = (error: string | null) => void;
+    export type SuccessErrorCallback = (success: boolean, error: string | null) => void;
+    export type InitializeCallback = SuccessErrorCallback;
     export type StringCallback = (value: string) => void;
     export type StringArrayCallback = (values: string[]) => void;
     export type BooleanCallback = (value: boolean) => void;
-    export type VoidCallback = () => void;
+    export type VoidCallback = SuccessErrorCallback;
     export type PropertiesCallback = (properties: Record<string, string[]>) => void;
 
     export interface BlueConicClientStatic {

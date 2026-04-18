@@ -38,8 +38,10 @@ rde.storeId = "store-1";
 rde.recommendations = [{ id: "item-1", price: 9.99 }];
 
 // --- Initialize ---
-BlueConicClient.initialize(config, err => {
+BlueConicClient.initialize(config, (success, err) => {
+    const ok: boolean = success;
     const message: string | null = err;
+    void ok;
     void message;
 });
 
