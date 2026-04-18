@@ -1,0 +1,48 @@
+{
+    "name": "@types/blueconic__blueconic-react-native",
+    "version": "5.2.0",
+    "description": "Unofficial TypeScript definitions for @blueconic/blueconic-react-native. Not affiliated with or endorsed by BlueConic.",
+    "license": "MIT",
+    "author": "Lander Parren <lander.parren.lp@gmail.com>",
+    "homepage": "https://github.com/Lander-Parren/types-blueconic-react-native#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Lander-Parren/types-blueconic-react-native.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Lander-Parren/types-blueconic-react-native/issues"
+    },
+    "keywords": [
+        "types",
+        "typescript",
+        "blueconic",
+        "react-native",
+        "declarations"
+    ],
+    "types": "index.d.ts",
+    "files": [
+        "index.d.ts",
+        "LICENSE",
+        "README.md"
+    ],
+    "scripts": {
+        "test": "tsc --noEmit -p tsconfig.json",
+        "sync": "node scripts/sync-upstream.mjs",
+        "sync:write": "node scripts/sync-upstream.mjs --write --bump",
+        "prerelease": "pnpm test",
+        "release:patch": "npm version patch && npm publish --access public && git push --follow-tags",
+        "release:minor": "npm version minor && npm publish --access public && git push --follow-tags",
+        "release:major": "npm version major && npm publish --access public && git push --follow-tags",
+        "release:upstream": "node scripts/sync-upstream.mjs --write --bump && pnpm test && npm publish --access public"
+    },
+    "devDependencies": {
+        "typescript": "^5.5.0"
+    },
+    "peerDependencies": {
+        "react-native": "*"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}
