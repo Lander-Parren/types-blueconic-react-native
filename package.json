@@ -1,9 +1,9 @@
 {
-    "name": "@types/blueconic__blueconic-react-native",
+    "name": "@lander-parren/blueconic-react-native-types",
     "version": "5.2.0",
     "description": "Unofficial TypeScript definitions for @blueconic/blueconic-react-native. Not affiliated with or endorsed by BlueConic.",
     "license": "MIT",
-    "author": "Lander Parren <lander.parren.lp@gmail.com>",
+    "author": "Lander Parren",
     "homepage": "https://github.com/Lander-Parren/types-blueconic-react-native#readme",
     "repository": {
         "type": "git",
@@ -39,7 +39,8 @@
         "typescript": "^5.5.0"
     },
     "peerDependencies": {
-        "react-native": "*"
+        "react-native": "*",
+        "@blueconic/blueconic-react-native": "*"
     },
     "publishConfig": {
         "access": "public",
