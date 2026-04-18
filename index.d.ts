@@ -102,6 +102,22 @@ declare module "@blueconic/blueconic-react-native" {
     /** Callback returning a map of profile properties to their values. */
     export type PropertiesCallback = (properties: Record<string, string[]>) => void;
 
+    /** A BlueConic segment the current profile belongs to. */
+    export interface Segment {
+        id: string;
+        name: string;
+    }
+
+    /** Callback returning the segments the current profile belongs to. */
+    export type SegmentsCallback = (segments: Segment[]) => void;
+
+    /** A single property entry returned by `getAllProfilePropertiesAsync`. */
+    export interface ProfileProperty {
+        id: string;
+        /** Comma-joined list of values the native side serializes. */
+        value: string;
+    }
+
     /**
      * The BlueConic React Native client. Mirror of the native `BlueConicClient`
      * singleton; all methods are thin wrappers over the iOS/Android bridge.
@@ -130,7 +146,7 @@ declare module "@blueconic/blueconic-react-native" {
         /** Callback variant of {@link BlueConicClientStatic.getProfileValuesAsync}. */
         getProfileValuesWithCallback(property: string, callback: StringArrayCallback): void;
         /** Resolves with every property on the current profile and its values. */
-        getAllProfilePropertiesAsync(): Promise<Record<string, string[]>>;
+        getAllProfilePropertiesAsync(): Promise<ProfileProperty[]>;
 
         // Privacy
         /** Resolves with the privacy legislation code set on the profile (e.g. `GDPR`). */
@@ -147,10 +163,10 @@ declare module "@blueconic/blueconic-react-native" {
         getRefusedObjectivesWithCallback(callback: StringArrayCallback): void;
 
         // Segments
-        /** Resolves with the segment IDs the current profile belongs to. */
-        getSegmentsAsync(): Promise<string[]>;
+        /** Resolves with the segments the current profile belongs to. */
+        getSegmentsAsync(): Promise<Segment[]>;
         /** Callback variant of {@link BlueConicClientStatic.getSegmentsAsync}. */
-        getSegmentsWithCallback(callback: StringArrayCallback): void;
+        getSegmentsWithCallback(callback: SegmentsCallback): void;
         /** Resolves with `true` if the profile is a member of the given segment. */
         hasSegmentAsync(segmentId: string): Promise<boolean>;
         /** Callback variant of {@link BlueConicClientStatic.hasSegmentAsync}. */
@@ -170,7 +186,7 @@ declare module "@blueconic/blueconic-react-native" {
         /** Sets a profile property to the given values, replacing any previous values. */
         setProfileValues(property: string, values: ReadonlyArray<string>): void;
         /** Increments a numeric profile property by the given delta. */
-        incrementProfileValue(property: string, value: number): void;
+        incrementProfileValue(property: string, value: string): void;
         /** Sets the privacy legislation code (e.g. `GDPR`, `CCPA`). */
         setPrivacyLegislation(privacyLegislation: string): void;
         /** Replaces the consented objectives list with the given IDs. */

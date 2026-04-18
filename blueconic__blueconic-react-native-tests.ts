@@ -52,7 +52,7 @@ BlueConicClient.getProfileValueAsync("email").then(v => v);
 BlueConicClient.getProfileValuesAsync("tags").then(values => values.map(v => v));
 BlueConicClient.getProfileValueWithCallback("email", v => v);
 BlueConicClient.getProfileValuesWithCallback("tags", values => values.length);
-BlueConicClient.getAllProfilePropertiesAsync().then(props => props["email"][0]);
+BlueConicClient.getAllProfilePropertiesAsync().then(props => props.map(p => `${p.id}=${p.value}`));
 
 // --- Privacy / consent ---
 BlueConicClient.getPrivacyLegislationAsync().then(l => l);
@@ -68,8 +68,8 @@ BlueConicClient.addConsentedObjective("analytics");
 BlueConicClient.addRefusedObjective("advertising");
 
 // --- Segments ---
-BlueConicClient.getSegmentsAsync().then(s => s);
-BlueConicClient.getSegmentsWithCallback(s => s);
+BlueConicClient.getSegmentsAsync().then(segments => segments.map(s => `${s.id}:${s.name}`));
+BlueConicClient.getSegmentsWithCallback(segments => segments.forEach(s => void s.id));
 BlueConicClient.hasSegmentAsync("vip").then(has => !has);
 BlueConicClient.hasSegmentWithCallback("vip", has => has);
 
@@ -78,7 +78,7 @@ BlueConicClient.addProfileValue("tags", "loyal");
 BlueConicClient.addProfileValues("tags", ["loyal", "returning"]);
 BlueConicClient.setProfileValue("email", "a@b.c");
 BlueConicClient.setProfileValues("tags", ["one", "two"]);
-BlueConicClient.incrementProfileValue("visits", 1);
+BlueConicClient.incrementProfileValue("visits", "1");
 
 // --- Generic events ---
 BlueConicClient.createEvent("custom", { foo: "bar" });
