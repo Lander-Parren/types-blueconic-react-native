@@ -1,4 +1,4 @@
-# @lander-parren/blueconic-react-native-types
+# @landerp/blueconic-react-native-types
 
 Unofficial TypeScript definitions for [`@blueconic/blueconic-react-native`](https://www.npmjs.com/package/@blueconic/blueconic-react-native).
 
@@ -7,9 +7,9 @@ Unofficial TypeScript definitions for [`@blueconic/blueconic-react-native`](http
 ## Install
 
 ```sh
-pnpm add -D @lander-parren/blueconic-react-native-types
+pnpm add -D @landerp/blueconic-react-native-types
 # or
-npm install --save-dev @lander-parren/blueconic-react-native-types
+npm install --save-dev @landerp/blueconic-react-native-types
 ```
 
 ## Usage
@@ -41,7 +41,7 @@ BlueConicClient.subscribe(EventName.PropertiesDialogue, false, "sub-1");
 If TypeScript doesn't pick up the augmentation automatically, add one of the following to any `.ts` file in your project (for example a `src/types/blueconic.d.ts`):
 
 ```ts
-import "@lander-parren/blueconic-react-native-types";
+import "@landerp/blueconic-react-native-types";
 ```
 
 All 78 native methods from the iOS/Android bridge are typed, each in its `sync` / `Async` / `WithCallback` variants.
