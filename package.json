@@ -1,5 +1,5 @@
 {
-    "name": "@lander-parren/blueconic-react-native-types",
+    "name": "@landerp/blueconic-react-native-types",
     "version": "5.2.0",
     "description": "Unofficial TypeScript definitions for @blueconic/blueconic-react-native. Not affiliated with or endorsed by BlueConic.",
     "license": "MIT",

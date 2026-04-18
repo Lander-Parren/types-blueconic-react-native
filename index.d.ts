@@ -1,6 +1,6 @@
 // Type definitions for @blueconic/blueconic-react-native 5.2
 // Project: https://www.npmjs.com/package/@blueconic/blueconic-react-native
-// Published as: @lander-parren/blueconic-react-native-types
+// Published as: @landerp/blueconic-react-native-types
 
 declare module "@blueconic/blueconic-react-native" {
     export type PropertyBag = Record<string, string | number | boolean | ReadonlyArray<string>>;
