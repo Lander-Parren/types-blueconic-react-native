@@ -1,4 +1,4 @@
-# @types/blueconic\_\_blueconic-react-native
+# @lander-parren/blueconic-react-native-types
 
 Unofficial TypeScript definitions for [`@blueconic/blueconic-react-native`](https://www.npmjs.com/package/@blueconic/blueconic-react-native).
 
@@ -7,14 +7,14 @@ Unofficial TypeScript definitions for [`@blueconic/blueconic-react-native`](http
 ## Install
 
 ```sh
-pnpm add -D @types/blueconic__blueconic-react-native
+pnpm add -D @lander-parren/blueconic-react-native-types
 # or
-npm install --save-dev @types/blueconic__blueconic-react-native
+npm install --save-dev @lander-parren/blueconic-react-native-types
 ```
 
-The package has `@blueconic/blueconic-react-native` as an implicit runtime dependency and `react-native` as a peer dependency — both should already be installed in a React Native project.
-
 ## Usage
+
+The package augments the `@blueconic/blueconic-react-native` module declaration, so once installed, normal imports of the upstream package pick up the types automatically — no import changes needed in your code:
 
 ```ts
 import BlueConicClient, {
@@ -38,6 +38,12 @@ BlueConicClient.setProfileValue("email", "user@example.com");
 BlueConicClient.subscribe(EventName.PropertiesDialogue, false, "sub-1");
 ```
 
+If TypeScript doesn't pick up the augmentation automatically, add one of the following to any `.ts` file in your project (for example a `src/types/blueconic.d.ts`):
+
+```ts
+import "@lander-parren/blueconic-react-native-types";
+```
+
 All 78 native methods from the iOS/Android bridge are typed, each in its `sync` / `Async` / `WithCallback` variants.
 
 ## Versioning
@@ -57,20 +63,16 @@ A scheduled GitHub Actions workflow (`.github/workflows/upstream-check.yml`) run
 
 ## Releasing
 
-1. `pnpm release:patch` — bumps patch, runs `tsc`, publishes, pushes tag.
-2. `git push --follow-tags` — triggers `.github/workflows/publish.yml`, which publishes to npm with provenance.
+1. `pnpm release:patch` — bumps patch, runs `tsc`, publishes to npm, pushes tag.
+2. The tag push triggers `.github/workflows/publish.yml`, which also publishes with provenance (idempotent).
 
-Use `release:minor` / `release:major` for larger changes, or `release:upstream` after a sync to ship a new upstream tracking version.
+Use `release:minor` / `release:major` for larger changes, or `release:upstream` after a sync to ship a new upstream-tracking version.
 
 ## Contributing
 
 1. Fork, branch, edit `index.d.ts` and `blueconic__blueconic-react-native-tests.ts`.
 2. Run `pnpm test` — must pass with zero errors under strict mode.
 3. Open a PR. CI runs `pnpm test` on every push and pull request.
-
-## An alternative: DefinitelyTyped
-
-If you'd prefer these types to ship via the `@types/*` org (where users get them automatically), submit a PR to [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped). This package's structure is already compatible: `index.d.ts`, `*-tests.ts`, `tsconfig.json`, MIT license.
 
 ## License
 

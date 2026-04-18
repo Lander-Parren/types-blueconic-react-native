@@ -4,7 +4,7 @@ import BlueConicClient, {
     EventName,
     PropertiesDialogueEvent,
     RecommendationsDialogueEvent,
-} from "./index";
+} from "@blueconic/blueconic-react-native";
 
 // --- Configuration builder ---
 const config: BlueConicConfiguration = new BlueConicConfiguration.Builder()
