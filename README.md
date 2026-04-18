@@ -38,10 +38,18 @@ BlueConicClient.setProfileValue("email", "user@example.com");
 BlueConicClient.subscribe(EventName.PropertiesDialogue, false, "sub-1");
 ```
 
-If TypeScript doesn't pick up the augmentation automatically, add one of the following to any `.ts` file in your project (for example a `src/types/blueconic.d.ts`):
+If TypeScript doesn't pick up the augmentation automatically (common when your `tsconfig.json` excludes `node_modules`, as most do), reference the package from one of your project's declaration files.
+
+In a `.ts` or `.tsx` file — or a `.d.ts` that is already a module:
 
 ```ts
 import "@landerp/blueconic-react-native-types";
+```
+
+In an ambient `.d.ts` file (one without top-level `import`/`export`, e.g. an Expo project's `declarations.d.ts`), use a triple-slash reference so the file stays a script and sibling `declare module` blocks keep working:
+
+```ts
+/// <reference types="@landerp/blueconic-react-native-types" />
 ```
 
 All 78 native methods from the iOS/Android bridge are typed, each in its `sync` / `Async` / `WithCallback` variants.
