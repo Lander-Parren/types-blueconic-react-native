@@ -63,16 +63,27 @@ A scheduled GitHub Actions workflow (`.github/workflows/upstream-check.yml`) run
 
 ## Releasing
 
-1. `pnpm release:patch` — bumps patch, runs `tsc`, publishes to npm, pushes tag.
-2. The tag push triggers `.github/workflows/publish.yml`, which also publishes with provenance (idempotent).
+Releases are fully automated by [release-please](https://github.com/googleapis/release-please) + [Conventional Commits](https://www.conventionalcommits.org/):
 
-Use `release:minor` / `release:major` for larger changes, or `release:upstream` after a sync to ship a new upstream-tracking version.
+1. Commits land on `main` with Conventional Commit prefixes:
+   - `feat:` — new typings or capabilities (minor bump)
+   - `fix:` — type corrections (patch bump)
+   - `feat!:` / `fix!:` / `BREAKING CHANGE:` — major bump
+   - `chore:`, `docs:`, `refactor:` — no release
+2. Release Please opens (or updates) a **Release PR** that bumps `package.json` + regenerates `CHANGELOG.md`.
+3. Merging the Release PR:
+   - Tags `vX.Y.Z`
+   - Creates a GitHub Release with the generated changelog
+   - The tag push triggers `publish.yml`, which publishes to npm with provenance.
+
+No manual version bumps, no manual `npm publish`.
 
 ## Contributing
 
 1. Fork, branch, edit `index.d.ts` and `blueconic__blueconic-react-native-tests.ts`.
 2. Run `pnpm test` — must pass with zero errors under strict mode.
-3. Open a PR. CI runs `pnpm test` on every push and pull request.
+3. Commit using Conventional Commits (`feat: add X`, `fix: correct Y`).
+4. Open a PR. CI runs `pnpm test` on every push and pull request.
 
 ## License
 

@@ -28,12 +28,7 @@
     "scripts": {
         "test": "tsc --noEmit -p tsconfig.json",
         "sync": "node scripts/sync-upstream.mjs",
-        "sync:write": "node scripts/sync-upstream.mjs --write --bump",
-        "prerelease": "pnpm test",
-        "release:patch": "npm version patch && npm publish --access public && git push --follow-tags",
-        "release:minor": "npm version minor && npm publish --access public && git push --follow-tags",
-        "release:major": "npm version major && npm publish --access public && git push --follow-tags",
-        "release:upstream": "node scripts/sync-upstream.mjs --write --bump && pnpm test && npm publish --access public"
+        "sync:write": "node scripts/sync-upstream.mjs --write"
     },
     "devDependencies": {
         "typescript": "^5.5.0"

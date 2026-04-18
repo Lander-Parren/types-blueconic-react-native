@@ -22,7 +22,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      - name: Run sync (write new snapshot + bump)
+      - name: Run sync (write new snapshot)
         run: pnpm sync:write | tee sync.log
 
       - name: Detect changes
@@ -39,7 +39,20 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           branch: upstream-sync
-          title: "chore: sync upstream BlueConic API"
-          commit-message: "chore: sync upstream BlueConic API"
-          body-path: sync.log
+          title: "chore: sync upstream BlueConic API snapshot"
+          commit-message: "chore: sync upstream BlueConic API snapshot"
+          body: |
+            Upstream API surface of `@blueconic/blueconic-react-native` changed. The snapshot in this PR captures the new surface.
+
+            **Follow-up required before merging:**
+            1. Update `index.d.ts` to reflect the diff below.
+            2. Amend / add a commit with a Conventional Commit prefix:
+               - `feat:` for new methods or capabilities (triggers a minor release)
+               - `fix:` for type corrections (triggers a patch release)
+               - `feat!:` or `BREAKING CHANGE:` for breaking changes (major release)
+            3. Ensure `pnpm test` still passes.
+
+            ---
+
+            Snapshot diff attached as run log.
           labels: upstream-sync
