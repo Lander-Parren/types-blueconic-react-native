@@ -1,5 +1,5 @@
 # @blueconic/blueconic-react-native upstream API snapshot
-# version: 5.2.0
+# version: 5.2.1
 
 ## JS exports (index.js)
 - BlueConicConfiguration
