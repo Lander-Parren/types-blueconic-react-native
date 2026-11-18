@@ -1,32 +1,108 @@
 name: Publish
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git tag to publish (e.g. v5.2.3)"
+        description: "Published GitHub release tag (e.g. v5.3.0)"
         required: true
+        type: string
+      verify_only:
+        description: "Test the release and verify npm authorization without publishing"
+        type: boolean
+        default: false
+
+permissions: {}
 
 jobs:
-  publish:
+  release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+
+  publish:
+    needs: release-please
+    if: >-
+      !cancelled() && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (needs.release-please.result == 'success' && needs.release-please.outputs.release_created == 'true'))
+    runs-on: ubuntu-latest
+    environment: npm-publish
     permissions:
       contents: read
       id-token: write
+    env:
+      PACKAGE_NAME: "@landerp/blueconic-react-native-types"
+      RELEASE_TAG: ${{ inputs.ref || needs.release-please.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check the published GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$RELEASE_TAG" == v* ]]
+          tag=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json tagName,isDraft --jq 'select(.isDraft == false) | .tagName')
+          [[ "$tag" == "$RELEASE_TAG" ]]
+      - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.ref }}
-      - uses: pnpm/action-setup@v4
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check release history and package identity
+        run: |
+          git merge-base --is-ancestor HEAD "$GITHUB_SHA"
+          jq -e --arg name "$PACKAGE_NAME" --arg tag "$RELEASE_TAG" \
+            '.name == $name and ("v" + .version) == $tag' package.json >/dev/null
+      - uses: pnpm/action-setup@v6
         with:
           version: 9
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
-          registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      - run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify the npm trusted publisher
+        if: inputs.verify_only
+        run: |
+          node --input-type=module <<'NODE'
+          const url = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
+          url.searchParams.set("audience", "npm:registry.npmjs.org");
+          const identity = await fetch(url, {
+            headers: { Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}` },
+            redirect: "error",
+          });
+          if (!identity.ok) throw new Error(`GitHub OIDC request failed (HTTP ${identity.status})`);
+          const { value } = await identity.json().catch(() => ({}));
+          if (typeof value !== "string" || !value) throw new Error("GitHub returned no OIDC token");
+
+          const pkg = encodeURIComponent(process.env.PACKAGE_NAME);
+          const exchange = await fetch(`https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/${pkg}`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${value}` },
+            redirect: "error",
+          });
+          if (exchange.status !== 201) throw new Error(`npm OIDC exchange failed (HTTP ${exchange.status})`);
+          const { token_type, token } = await exchange.json().catch(() => ({}));
+          if (token_type !== "oidc" || typeof token !== "string" || !token) {
+            throw new Error("npm returned no OIDC publishing credential");
+          }
+          console.log(`npm accepted this workflow identity for ${process.env.PACKAGE_NAME}.`);
+          NODE
+      - name: Publish to npm
+        if: ${{ !inputs.verify_only }}
+        run: npm publish --access public --provenance --registry=https://registry.npmjs.org
