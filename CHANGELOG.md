@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.3.0](https://github.com/Lander-Parren/types-blueconic-react-native/compare/v5.2.4...v5.3.0) (2026-11-18)
+
+
+### Features
+
+* align React Native types with BlueConic SDK 5.3 ([9c719d1](https://github.com/Lander-Parren/types-blueconic-react-native/commit/9c719d177314c505a815409d86dc0a499bfdf8ff))
+
 ## [5.2.4](https://github.com/Lander-Parren/types-blueconic-react-native/compare/v5.2.3...v5.2.4) (2026-04-18)
 
 
