@@ -112,7 +112,19 @@ The upstream-check workflow is configured for weekly checks and can open a snaps
 
 Release Please uses Conventional Commits on `main` to prepare a release PR with the version and changelog. A `feat:` commit requests a minor version, a `fix:` requests a patch, and a breaking change requests a major version. [Release Please](https://github.com/googleapis/release-please) · [Conventional Commits](https://www.conventionalcommits.org/)
 
-Merging the release PR creates a `vX.Y.Z` tag and a GitHub Release. The publish job in the same workflow checks out that tag, runs the tests and publishes to npm with provenance. The separate Publish workflow supports manual retries.
+Merging the release PR creates a `vX.Y.Z` tag and a GitHub Release. The Publish workflow checks out the tag, runs the tests and publishes with provenance. npm grants short-lived credentials to `Lander-Parren/types-blueconic-react-native` through the `publish.yml` workflow and the `npm-publish` GitHub environment on `main`. [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
+
+If publication fails, retry the failed job in the original run with `gh run rerun RUN_ID --failed`. To start a separate attempt, replace `vX.Y.Z` with the existing GitHub release tag in this command.
+
+```sh
+gh workflow run publish.yml --ref main -f ref=vX.Y.Z
+```
+
+Use `verify_only=true` to run the release tests and verify that npm issues a short-lived credential for this package.
+
+```sh
+gh workflow run publish.yml --ref main -f ref=v5.3.0 -f verify_only=true
+```
 
 ## Contributing
 
