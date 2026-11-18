@@ -1,5 +1,5 @@
 # @blueconic/blueconic-react-native upstream API snapshot
-# version: 5.2.0
+# version: 5.3.0
 
 ## JS exports (index.js)
 - BlueConicConfiguration
@@ -63,8 +63,10 @@
 - initialize(_ properties: [String: Any], withCallback callback: @escaping RCTResponseSenderBlock)
 - isEnabledAsync(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock)
 - isEnabledWithCallback(_ callback: RCTResponseSenderBlock)
-- publishAdvancedEvent(_ name: String, withValues values: [String])
-- publishAdvancedEventWithCallback(_ name: String, withValues values: [String], withCallback callback: @escaping RCTResponseSenderBlock)
+- publishAdvancedEvent(_ name: String, withValues values: [Any])
+- publishAdvancedEventWithCallback(_ name: String, withValues values: [Any], withCallback callback: @escaping RCTResponseSenderBlock)
+- publishAdvancedEventWithObjectContext(_ name: String, withContext context: [String: Any])
+- publishAdvancedEventWithObjectContextWithCallback(_ name: String, withContext context: [String: Any], withCallback callback: @escaping RCTResponseSenderBlock)
 - publishClickEvent(_ selector: String, withValues values: [String])
 - publishClickEventWithCallback(_ selector: String, withValues values: [String], withCallback callback: @escaping RCTResponseSenderBlock)
 - publishFormSubmitEvent(_ selector: String, withValues values: [String])
