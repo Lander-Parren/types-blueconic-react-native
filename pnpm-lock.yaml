@@ -8,13 +8,13 @@ importers:
 
   .:
     dependencies:
-      '@blueconic/blueconic-react-native':
-        specifier: '*'
-        version: 5.2.0(react-native@0.85.1(@babel/core@7.29.0)(react@19.2.5))
       react-native:
         specifier: '*'
         version: 0.85.1(@babel/core@7.29.0)(react@19.2.5)
     devDependencies:
+      '@blueconic/blueconic-react-native':
+        specifier: 5.3.0
+        version: 5.3.0(react-native@0.85.1(@babel/core@7.29.0)(react@19.2.5))
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -92,10 +92,10 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@blueconic/blueconic-react-native@5.2.0':
-    resolution: {integrity: sha512-O8siFfGRDzGIXbHqxD19tHnfiietH08er8FEeVS0PpCqD7EysMsAtehFqdC2bUhHBWbIM38db79hgucZZluO/g==}
+  '@blueconic/blueconic-react-native@5.3.0':
+    resolution: {integrity: sha512-fZzOHHNJ0PUlUddT65l//KTPCbPH3HFgP94YSzom2o63frkPsOOd8JyFOM/YQHBhDec6C/alO/lXOyWlVQMpeQ==}
     peerDependencies:
-      react-native: <1.0.0
+      react-native: '>=0.75.0 <1.0.0'
 
   '@isaacs/ttlcache@1.4.1':
     resolution: {integrity: sha512-RQgQ4uQ+pLbqXfOmieB91ejmLwvSgv9nLx6sT6sD83s7umBypgg+OIBOBbEUiJXrfpnp9j0mRhYYdzp9uqq3lA==}
@@ -1017,7 +1017,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@blueconic/blueconic-react-native@5.2.0(react-native@0.85.1(@babel/core@7.29.0)(react@19.2.5))':
+  '@blueconic/blueconic-react-native@5.3.0(react-native@0.85.1(@babel/core@7.29.0)(react@19.2.5))':
     dependencies:
       react-native: 0.85.1(@babel/core@7.29.0)(react@19.2.5)
 

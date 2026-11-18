@@ -1,21 +1,24 @@
-// Type definitions for @blueconic/blueconic-react-native 5.2
+// Type definitions for @blueconic/blueconic-react-native 5.3
 // Project: https://www.npmjs.com/package/@blueconic/blueconic-react-native
 // Published as: @landerp/blueconic-react-native-types
 
 declare module "@blueconic/blueconic-react-native" {
-    /** Dictionary of property values that can be attached to BlueConic events. */
-    export type PropertyBag = Record<string, string | number | boolean | ReadonlyArray<string>>;
+    /** A JSON value that the event bridge can transport. */
+    export type PropertyValue = string | number | boolean | null | readonly PropertyValue[] | PropertyBag;
 
-    /** Dictionary of string-only properties (used by generic events). */
+    /** Properties for page views, interactions, and timeline events. */
+    export type PropertyBag = { [key: string]: PropertyValue };
+
+    /** String properties for generic events and advanced events with object context. */
     export type StringPropertyBag = Record<string, string>;
 
     /**
      * Fluent builder for {@link BlueConicConfiguration}. Configure hostname,
      * debug flag, and optional simulator/override fields, then call `build()`.
      */
-    export interface BlueConicConfigurationBuilder {
-        /** Sets the BlueConic server URL (e.g. `https://example.blueconic.net`). */
-        setHostName(hostName: string): this;
+    export interface BlueConicConfigurationBuilder<Host extends string | undefined = string | undefined> {
+        /** Sets the server URL and returns the builder ready for initialization. */
+        setHostName(hostName: string): BlueConicConfigurationBuilder<string>;
         /** Enables verbose native logging. Disable in production. */
         setDebug(debug: boolean): this;
         /** Overrides the bundle/app identifier reported to BlueConic. */
@@ -25,15 +28,16 @@ declare module "@blueconic/blueconic-react-native" {
         /** Sets the simulator session ID used when testing from the BlueConic simulator. */
         setSimulatorSessionId(simulatorSessionId: string): this;
         /** Finalizes the configuration and returns a {@link BlueConicConfiguration}. */
-        build(): BlueConicConfiguration;
+        build(): BlueConicConfiguration<Host>;
     }
 
     /**
-     * Immutable configuration object passed to `BlueConicClient.initialize`.
-     * Construct via `new BlueConicConfiguration.Builder()…build()`.
+     * Configuration object passed to `BlueConicClient.initialize`.
+     * Call `setHostName()` on the builder before initializing the client.
      */
-    export class BlueConicConfiguration {
-        bc_hostname?: string;
+    export class BlueConicConfiguration<Host extends string | undefined = string> {
+        constructor(builder: BlueConicConfigurationBuilder<Host>);
+        bc_hostname: Host;
         bc_debug?: boolean;
         override_app_id?: string;
         simulator_username?: string;
@@ -50,31 +54,54 @@ declare module "@blueconic/blueconic-react-native" {
         static readonly RecommendationsDialogue: "recommendationsDialogueEvent";
     }
 
-    /** Base class for events delivered through the `subscribe` channel. */
+    /** JavaScript event model. Its fields start out undefined. */
     export class Event {
-        name: string;
-        context: unknown;
+        name?: string;
+        context?: Record<string, unknown>;
     }
 
-    /** Payload for a Properties Dialogue interaction. */
+    /** Plain object delivered on the `blueConicEvent` channel for a custom subscription. */
+    export interface BlueConicEventPayload {
+        name: string;
+        context?: Record<string, unknown>;
+    }
+
+    /** JavaScript Properties Dialogue model. Its fields start out undefined. */
     export class PropertiesDialogueEvent {
+        variantId?: string;
+        position?: string;
+        data?: string;
+    }
+
+    /** Plain object delivered on the `propertiesDialogueEvent` channel. */
+    export interface PropertiesDialoguePayload {
         variantId: string;
         position: string;
-        data: Record<string, string | ReadonlyArray<string>>;
+        /** JSON text containing the dialogue's properties. */
+        data: string;
     }
 
-    /** A single recommended item returned by a Recommendations Dialogue. */
+    /** An item shape for applications that validate the decoded recommendations. */
     export interface Recommendation {
         id: string;
         [field: string]: unknown;
     }
 
-    /** Payload for a Recommendations Dialogue interaction. */
+    /** JavaScript Recommendations Dialogue model. Its fields start out undefined. */
     export class RecommendationsDialogueEvent {
+        variantId?: string;
+        position?: string;
+        storeId?: string;
+        recommendations?: string;
+    }
+
+    /** Plain object delivered on the `recommendationsDialogueEvent` channel. */
+    export interface RecommendationsDialoguePayload {
         variantId: string;
         position: string;
         storeId: string;
-        recommendations: Recommendation[];
+        /** JSON text containing the recommendations. */
+        recommendations: string;
     }
 
     /**
@@ -90,16 +117,16 @@ declare module "@blueconic/blueconic-react-native" {
     /** Callback returning a single string value (e.g. profile ID). */
     export type StringCallback = (value: string) => void;
 
-    /** Callback returning an array of strings (e.g. profile values). */
+    /** Callback accepting a single array of strings. */
     export type StringArrayCallback = (values: string[]) => void;
 
-    /** Callback returning a single boolean value (e.g. segment membership). */
+    /** Callback receiving a single boolean, as delivered by iOS. */
     export type BooleanCallback = (value: boolean) => void;
 
     /** Alias for {@link SuccessErrorCallback}. Kept for readability on void-returning operations. */
     export type VoidCallback = SuccessErrorCallback;
 
-    /** Callback returning a map of profile properties to their values. */
+    /** Callback accepting profile properties grouped by property ID. */
     export type PropertiesCallback = (properties: Record<string, string[]>) => void;
 
     /** A BlueConic segment the current profile belongs to. */
@@ -108,7 +135,7 @@ declare module "@blueconic/blueconic-react-native" {
         name: string;
     }
 
-    /** Callback returning the segments the current profile belongs to. */
+    /** Android callback receiving the list of segments as one argument. */
     export type SegmentsCallback = (segments: Segment[]) => void;
 
     /** A single property entry returned by `getAllProfilePropertiesAsync`. */
@@ -119,12 +146,14 @@ declare module "@blueconic/blueconic-react-native" {
     }
 
     /**
-     * The BlueConic React Native client. Mirror of the native `BlueConicClient`
-     * singleton; all methods are thin wrappers over the iOS/Android bridge.
+     * Operations with the same signature on the iOS and Android native clients.
+     * Event creation and profile update promises resolve with an empty array
+     * when the SDK finishes, including on SDK errors. Use the callback forms
+     * to receive the success flag and error.
      *
-     * @see https://support.blueconic.com/hc/en-us/categories/360002108332
+     * @see https://support.blueconic.com/en/articles/248017-blueconic-sdk-for-react-native
      */
-    export interface BlueConicClientStatic {
+    interface BlueConicCommonClient {
         /**
          * Initializes the BlueConic client. Must be called before any tracking
          * or profile API. The callback fires once the native side has connected
@@ -133,44 +162,8 @@ declare module "@blueconic/blueconic-react-native" {
         initialize(properties: BlueConicConfiguration, callback: InitializeCallback): void;
 
         // Profile read
-        /** Resolves with the current BlueConic profile ID. */
-        getProfileIdAsync(): Promise<string>;
-        /** Callback variant of {@link BlueConicClientStatic.getProfileIdAsync}. */
-        getProfileIdWithCallback(callback: StringCallback): void;
-        /** Resolves with the first value stored for the given profile property. */
-        getProfileValueAsync(property: string): Promise<string>;
-        /** Resolves with every value stored for the given profile property. */
-        getProfileValuesAsync(property: string): Promise<string[]>;
-        /** Callback variant of {@link BlueConicClientStatic.getProfileValueAsync}. */
-        getProfileValueWithCallback(property: string, callback: StringCallback): void;
-        /** Callback variant of {@link BlueConicClientStatic.getProfileValuesAsync}. */
-        getProfileValuesWithCallback(property: string, callback: StringArrayCallback): void;
         /** Resolves with every property on the current profile and its values. */
         getAllProfilePropertiesAsync(): Promise<ProfileProperty[]>;
-
-        // Privacy
-        /** Resolves with the privacy legislation code set on the profile (e.g. `GDPR`). */
-        getPrivacyLegislationAsync(): Promise<string>;
-        /** Callback variant of {@link BlueConicClientStatic.getPrivacyLegislationAsync}. */
-        getPrivacyLegislationWithCallback(callback: StringCallback): void;
-        /** Resolves with the objective IDs the user has consented to. */
-        getConsentedObjectivesAsync(): Promise<string[]>;
-        /** Callback variant of {@link BlueConicClientStatic.getConsentedObjectivesAsync}. */
-        getConsentedObjectivesWithCallback(callback: StringArrayCallback): void;
-        /** Resolves with the objective IDs the user has refused. */
-        getRefusedObjectivesAsync(): Promise<string[]>;
-        /** Callback variant of {@link BlueConicClientStatic.getRefusedObjectivesAsync}. */
-        getRefusedObjectivesWithCallback(callback: StringArrayCallback): void;
-
-        // Segments
-        /** Resolves with the segments the current profile belongs to. */
-        getSegmentsAsync(): Promise<Segment[]>;
-        /** Callback variant of {@link BlueConicClientStatic.getSegmentsAsync}. */
-        getSegmentsWithCallback(callback: SegmentsCallback): void;
-        /** Resolves with `true` if the profile is a member of the given segment. */
-        hasSegmentAsync(segmentId: string): Promise<boolean>;
-        /** Callback variant of {@link BlueConicClientStatic.hasSegmentAsync}. */
-        hasSegmentWithCallback(segmentId: string, callback: BooleanCallback): void;
 
         // Profile write
         /** Appends a single value to a profile property (duplicates are ignored). */
@@ -185,8 +178,8 @@ declare module "@blueconic/blueconic-react-native" {
         setProfileValue(property: string, value: string): void;
         /** Sets a profile property to the given values, replacing any previous values. */
         setProfileValues(property: string, values: ReadonlyArray<string>): void;
-        /** Increments a numeric profile property by the given delta. */
-        incrementProfileValue(property: string, value: string): void;
+        /** Increments a numeric profile property by the given integer. */
+        incrementProfileValue(property: string, value: number): void;
         /** Sets the privacy legislation code (e.g. `GDPR`, `CCPA`). */
         setPrivacyLegislation(privacyLegislation: string): void;
         /** Replaces the consented objectives list with the given IDs. */
@@ -198,7 +191,7 @@ declare module "@blueconic/blueconic-react-native" {
         /** Records a generic named event with string-only properties. */
         createEvent(eventName: string, properties: StringPropertyBag): void;
         /** Promise variant of {@link BlueConicClientStatic.createEvent}. */
-        createEventAsync(eventName: string, properties: StringPropertyBag): Promise<void>;
+        createEventAsync(eventName: string, properties: StringPropertyBag): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createEvent}. */
         createEventWithCallback(eventName: string, properties: StringPropertyBag, callback: VoidCallback): void;
 
@@ -210,7 +203,7 @@ declare module "@blueconic/blueconic-react-native" {
         /** Flushes any pending profile updates to the server (fire-and-forget). */
         updateProfile(): void;
         /** Promise variant of {@link BlueConicClientStatic.updateProfile}. */
-        updateProfileAsync(): Promise<void>;
+        updateProfileAsync(): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.updateProfile}. */
         updateProfileWithCallback(callback: VoidCallback): void;
 
@@ -219,10 +212,8 @@ declare module "@blueconic/blueconic-react-native" {
         setLocale(locale: string): void;
         /** Enables or disables the BlueConic client without uninitializing it. */
         setEnabled(isEnabled: boolean): void;
-        /** Resolves with `true` when the BlueConic client is currently enabled. */
-        isEnabledAsync(): Promise<boolean>;
-        /** Callback variant of {@link BlueConicClientStatic.isEnabledAsync}. */
-        isEnabledWithCallback(callback: BooleanCallback): void;
+        /** Resolves with a one-element array containing the current enabled flag. */
+        isEnabledAsync(): Promise<[boolean]>;
 
         // Page view / interaction events
         /**
@@ -232,21 +223,21 @@ declare module "@blueconic/blueconic-react-native" {
          */
         createPageViewEvent(screenName: string, properties: PropertyBag): void;
         /** Promise variant of {@link BlueConicClientStatic.createPageViewEvent}. */
-        createPageViewEventAsync(screenName: string, properties: PropertyBag): Promise<void>;
+        createPageViewEventAsync(screenName: string, properties: PropertyBag): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createPageViewEvent}. */
         createPageViewEventWithCallback(screenName: string, properties: PropertyBag, callback: VoidCallback): void;
 
         /** Records a VIEW interaction event (e.g. user saw a specific element). */
         createViewEvent(interactionId: string, properties: PropertyBag): void;
         /** Promise variant of {@link BlueConicClientStatic.createViewEvent}. */
-        createViewEventAsync(interactionId: string, properties: PropertyBag): Promise<void>;
+        createViewEventAsync(interactionId: string, properties: PropertyBag): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createViewEvent}. */
         createViewEventWithCallback(interactionId: string, properties: PropertyBag, callback: VoidCallback): void;
 
         /** Records a CONVERSION interaction event (e.g. user completed a goal). */
         createConversionEvent(interactionId: string, properties: PropertyBag): void;
         /** Promise variant of {@link BlueConicClientStatic.createConversionEvent}. */
-        createConversionEventAsync(interactionId: string, properties: PropertyBag): Promise<void>;
+        createConversionEventAsync(interactionId: string, properties: PropertyBag): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createConversionEvent}. */
         createConversionEventWithCallback(
             interactionId: string,
@@ -257,41 +248,41 @@ declare module "@blueconic/blueconic-react-native" {
         /** Records a CLICK interaction event (e.g. user tapped a tracked element). */
         createClickEvent(interactionId: string, properties: PropertyBag): void;
         /** Promise variant of {@link BlueConicClientStatic.createClickEvent}. */
-        createClickEventAsync(interactionId: string, properties: PropertyBag): Promise<void>;
+        createClickEventAsync(interactionId: string, properties: PropertyBag): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createClickEvent}. */
         createClickEventWithCallback(interactionId: string, properties: PropertyBag, callback: VoidCallback): void;
 
         // Timeline events
-        /** Records a timeline event of the given type at the given date. */
-        createTimelineEvent(eventType: string, eventDate: Date | number, properties: PropertyBag): void;
+        /** Records a timeline event at the given Unix timestamp in milliseconds. */
+        createTimelineEvent(eventType: string, eventDate: number, properties: PropertyBag): void;
         /** Promise variant of {@link BlueConicClientStatic.createTimelineEvent}. */
-        createTimelineEventAsync(eventType: string, eventDate: Date | number, properties: PropertyBag): Promise<void>;
+        createTimelineEventAsync(eventType: string, eventDate: number, properties: PropertyBag): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createTimelineEvent}. */
         createTimelineEventWithCallback(
             eventType: string,
-            eventDate: Date | number,
+            eventDate: number,
             properties: PropertyBag,
             callback: VoidCallback,
         ): void;
-        /** Records a timeline event with an explicit ID (used for idempotent upserts). */
+        /** Records a timeline event with an explicit ID and a Unix timestamp in milliseconds. */
         createTimelineEventById(
             eventId: string,
             eventType: string,
-            eventDate: Date | number,
+            eventDate: number,
             properties: PropertyBag,
         ): void;
         /** Promise variant of {@link BlueConicClientStatic.createTimelineEventById}. */
         createTimelineEventByIdAsync(
             eventId: string,
             eventType: string,
-            eventDate: Date | number,
+            eventDate: number,
             properties: PropertyBag,
-        ): Promise<void>;
+        ): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createTimelineEventById}. */
         createTimelineEventByIdWithCallback(
             eventId: string,
             eventType: string,
-            eventDate: Date | number,
+            eventDate: number,
             properties: PropertyBag,
             callback: VoidCallback,
         ): void;
@@ -304,7 +295,7 @@ declare module "@blueconic/blueconic-react-native" {
             storeId: string,
             action: string,
             itemIds: ReadonlyArray<string>,
-        ): Promise<void>;
+        ): Promise<[]>;
         /** Callback variant of {@link BlueConicClientStatic.createRecommendationEvent}. */
         createRecommendationEventWithCallback(
             storeId: string,
@@ -356,13 +347,19 @@ declare module "@blueconic/blueconic-react-native" {
             values: ReadonlyArray<string>,
             callback: VoidCallback,
         ): void;
+        /** Publishes an advanced event with string values keyed by context name. */
+        publishAdvancedEventWithObjectContext(name: string, context: StringPropertyBag): void;
+        /** Reports the outcome of publishing the object context to listeners. */
+        publishAdvancedEventWithObjectContextWithCallback(
+            name: string,
+            context: StringPropertyBag,
+            callback: SuccessErrorCallback,
+        ): void;
 
         // Misc
         /** Tears down any active plugins. Normally called as part of unmount. */
         destroyPlugins(): void;
-        /** Resolves with the last screen name set via `createPageViewEvent`. */
-        getScreenNameAsync(): Promise<string>;
-        /** Callback variant of {@link BlueConicClientStatic.getScreenNameAsync}. */
+        /** Receives the last screen name set via `createPageViewEvent`. */
         getScreenNameWithCallback(callback: StringCallback): void;
 
         // NativeModule conformance — required so BlueConicClient can be
@@ -372,6 +369,77 @@ declare module "@blueconic/blueconic-react-native" {
         /** Required by `NativeEventEmitter` to remove the given number of listeners. */
         removeListeners(count: number): void;
     }
+
+    /**
+     * The iOS bridge preserves its result arrays for promises. For callbacks it
+     * passes each element of the native array as a separate JavaScript argument.
+     */
+    export interface BlueConicIOSClient extends BlueConicCommonClient {
+        /** Profile ID or an empty string, inside a one-element array. */
+        getProfileIdAsync(): Promise<[string]>;
+        getProfileIdWithCallback(callback: StringCallback): void;
+        getProfileValueAsync(property: string): Promise<[string]>;
+        getProfileValueWithCallback(property: string, callback: StringCallback): void;
+        /** Resolves with undefined when the native profile supplies no list. */
+        getProfileValuesAsync(property: string): Promise<string[] | undefined>;
+        getProfileValuesWithCallback(property: string, callback: (...values: string[]) => void): void;
+
+        getPrivacyLegislationAsync(): Promise<[string]>;
+        getPrivacyLegislationWithCallback(callback: StringCallback): void;
+        getConsentedObjectivesAsync(): Promise<string[] | undefined>;
+        getConsentedObjectivesWithCallback(callback: (...objectiveIds: string[]) => void): void;
+        getRefusedObjectivesAsync(): Promise<string[] | undefined>;
+        getRefusedObjectivesWithCallback(callback: (...objectiveIds: string[]) => void): void;
+
+        getSegmentsAsync(): Promise<Segment[]>;
+        /** Receives one argument per segment, or no arguments for an empty list. */
+        getSegmentsWithCallback(callback: (...segments: Segment[]) => void): void;
+        hasSegmentAsync(segmentId: string): Promise<[boolean]>;
+        hasSegmentWithCallback(segmentId: string, callback: BooleanCallback): void;
+
+        isEnabledWithCallback(callback: BooleanCallback): void;
+        getScreenNameAsync(): Promise<[string]>;
+    }
+
+    /**
+     * The Android bridge passes a single argument to each read callback.
+     * Lists of profile values and objectives are nested inside a one-element array.
+     */
+    export interface BlueConicAndroidClient extends BlueConicCommonClient {
+        getProfileIdAsync(): Promise<string | null>;
+        getProfileIdWithCallback(callback: (value: string | null) => void): void;
+        getProfileValueAsync(property: string): Promise<[string | null]>;
+        getProfileValueWithCallback(property: string, callback: (value: [string | null]) => void): void;
+        getProfileValuesAsync(property: string): Promise<[string[]]>;
+        getProfileValuesWithCallback(property: string, callback: (values: [string[]]) => void): void;
+
+        getPrivacyLegislationAsync(): Promise<[string | null]>;
+        getPrivacyLegislationWithCallback(callback: (legislation: [string | null]) => void): void;
+        getConsentedObjectivesAsync(): Promise<[string[]]>;
+        getConsentedObjectivesWithCallback(callback: (objectiveIds: [string[]]) => void): void;
+        getRefusedObjectivesAsync(): Promise<[string[]]>;
+        getRefusedObjectivesWithCallback(callback: (objectiveIds: [string[]]) => void): void;
+
+        getSegments(): Promise<Segment[]>;
+        getSegmentsWithCallback(callback: SegmentsCallback): void;
+        /**
+         * SDK 5.3.0 sends a Java ArrayList that React Native 0.85.1 cannot
+         * serialize. Use `getSegments()` and check the IDs on that version.
+         */
+        hasSegment(segmentId: string): Promise<[boolean]>;
+        /** Has the same Android serialization issue as {@link BlueConicAndroidClient.hasSegment}. */
+        hasSegmentWithCallback(segmentId: string, callback: (membership: [boolean]) => void): void;
+        /** Uses the same Java ArrayList as `hasSegment`. Use `isEnabledAsync()` on React Native 0.85.1. */
+        isEnabledWithCallback(callback: (enabled: [boolean]) => void): void;
+        getScreenNameAsync(): Promise<string>;
+    }
+
+    /**
+     * Use `"getSegmentsAsync" in client` to narrow the type to iOS. Also check
+     * `typeof client.getSegmentsAsync === "function"` in a runtime type guard,
+     * since Hermes native host objects can report missing properties as present.
+     */
+    export type BlueConicClientStatic = BlueConicIOSClient | BlueConicAndroidClient;
 
     const BlueConicClient: BlueConicClientStatic;
     export default BlueConicClient;

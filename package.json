@@ -1,6 +1,6 @@
 {
     "name": "@landerp/blueconic-react-native-types",
-    "version": "5.2.4",
+    "version": "5.3.0",
     "description": "Unofficial TypeScript definitions for @blueconic/blueconic-react-native. Not affiliated with or endorsed by BlueConic.",
     "license": "MIT",
     "author": "Lander Parren",
@@ -26,16 +26,17 @@
         "README.md"
     ],
     "scripts": {
-        "test": "tsc --noEmit -p tsconfig.json",
+        "test": "tsc --noEmit -p tsconfig.json && node scripts/test-consumer.mjs",
         "sync": "node scripts/sync-upstream.mjs",
         "sync:write": "node scripts/sync-upstream.mjs --write"
     },
     "devDependencies": {
+        "@blueconic/blueconic-react-native": "5.3.0",
         "typescript": "^5.5.0"
     },
     "peerDependencies": {
         "react-native": "*",
-        "@blueconic/blueconic-react-native": "*"
+        "@blueconic/blueconic-react-native": "5.3.x"
     },
     "publishConfig": {
         "access": "public",
